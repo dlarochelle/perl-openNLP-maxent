@@ -13,7 +13,7 @@ use Data::Dumper;
 use File::Temp qw/ tempfile tempdir /;
 use Env qw(HOME);
 use File::Path qw(make_path remove_tree);
-
+use MaxEntModelFactory;
 
 sub output_testing_and_training
 {
@@ -97,6 +97,39 @@ sub create_model
     my $model_file_name = $training_data_file;
     
     $model_file_name =~ s/\.dat$/Model\.txt/;
+
+    return $model_file_name;
+}
+
+sub create_model_inline_java
+{
+    my ( $training_data_file, $iterations ) = @_;
+
+    say STDERR "creating model";
+
+    my $create_model_script_path;
+
+    if ( $gaussian )
+    {
+	$create_model_script_path = "$HOME/Dropbox/SCOTUS_Data2/apache-opennlp-1.5.2-incubating-src/opennlp-maxent/samples/sports/run_create_model_gaussian.sh";
+    }
+    else
+    {
+	$create_model_script_path = "$HOME/Dropbox/SCOTUS_Data2/apache-opennlp-1.5.2-incubating-src/opennlp-maxent/samples/sports/run_create_model.sh";
+    }
+
+    #say STDERR "running $create_model_script_path " .  "-$iterations " . $training_data_file;
+    #exit;
+
+    my $model = MaxEntModelFactory::create_model( $training_data_file, $iterations );
+
+    #system( $create_model_script_path, "-$iterations", $training_data_file );
+
+    my $model_file_name = $training_data_file;
+    
+    $model_file_name =~ s/\.dat$/Model_inline_java\.txt/;
+
+    MaxEntModelFactory::save_model( $model, $model_file_name ) ;
 
     return $model_file_name;
 }
